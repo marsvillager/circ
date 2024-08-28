@@ -11,6 +11,7 @@ use std::fs::File;
 use std::io;
 use std::io::{BufReader, BufWriter};
 use std::path::Path;
+use circ_opt::BuiltinField;
 
 /// Hold Spartan variables
 #[derive(Debug)]
@@ -23,12 +24,13 @@ pub struct Variable {
 pub fn prove<P: AsRef<Path>>(
     p_path: P,
     inputs_map: &HashMap<String, Value>,
+    ff_field: BuiltinField,
 ) -> io::Result<(NIZKGens, Instance, NIZK)> {
     let prover_data = read_prover_data::<_>(p_path)?;
 
     println!("Converting R1CS to Spartan");
     let (inst, wit, inps, num_cons, num_vars, num_inputs) =
-        spartan::r1cs_to_spartan(&prover_data, inputs_map);
+        spartan::r1cs_to_spartan(&prover_data, inputs_map, ff_field);
 
     println!("Proving with Spartan");
     assert_ne!(num_cons, 0, "No constraints");
@@ -75,6 +77,7 @@ pub fn verify<P: AsRef<Path>>(
 pub fn r1cs_to_spartan(
     prover_data: &ProverData,
     inputs_map: &HashMap<String, Value>,
+    ff_field: BuiltinField,
 ) -> (Instance, Assignment, Assignment, usize, usize, usize) {
     // spartan format mapper: CirC -> Spartan
     let mut wit = Vec::new();
@@ -84,8 +87,13 @@ pub fn r1cs_to_spartan(
 
     // check modulus
     let f_mod = prover_data.r1cs.field.modulus();
+
+    let order = match ff_field {
+        BuiltinField::Bls12381 => "52435875175126190479447740508185965837690552500527637822603658699938581184513",
+        BuiltinField::Bn254 => "21888242871839275222246405745257275088548364400416034343698204186575808495617",
+    };
     let s_mod = Integer::from_str_radix(
-        "7237005577332262213973186563042994240857116359379907606001950938285454250989",
+        order,
         10,
     )
     .unwrap();

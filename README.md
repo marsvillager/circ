@@ -71,3 +71,65 @@ and [cvc5](https://cvc5.github.io/) by setting the
 [RSMT2_CVC4_CMD](https://docs.rs/rsmt2/latest/rsmt2/conf/constant.CVC4_ENV_VAR.html)
 environmental variable to the SMT solver's invocation command (`cvc4` or
 `cvc5`).
+
+# ZKMB
+
+```
+cargo build --release --features spartan,smt,zok
+```
+
+```
+Usage: zkmb [OPTIONS] <COMMAND>
+
+Commands:
+  generate  
+  prove     
+  verify    
+  help      Print this message or the help of the given subcommand(s)
+```
+
+## generate
+
+```
+Usage: zkmb generate [OPTIONS] --path <PATH>
+
+Options:
+      --path <PATH>                  
+      --prover-key <PROVER_KEY>      [default: P]
+      --verifier-key <VERIFIER_KEY>  [default: V]
+  		-h, --help                         Print help
+```
+
+e.g. `./target/release/zkmb generate --path ./examples/ZoKrates/pf/arr_str_arr_str.zok`
+
+## prove
+
+```
+Usage: zkmb prove [OPTIONS]
+
+Options:
+      --prover-key <PROVER_KEY>  [default: P]
+      --pin <PIN>                [default: pin]
+      --gens-path <GENS_PATH>    [default: gen]
+      --inst-path <INST_PATH>    [default: inst]
+      --proof-path <PROOF_PATH>  [default: proof]
+  		-h, --help                     Print help
+```
+
+e.g. `./target/release/zkmb prove --pin ./examples/ZoKrates/pf/arr_str_arr_str.zok.pin`
+
+## verify
+
+```
+Usage: zkmb verify [OPTIONS]
+
+Options:
+      --verifier-key <VERIFIER_KEY>  [default: V]
+      --vin <VIN>                    [default: vin]
+      --gens-path <GENS_PATH>        [default: gens]
+      --inst-path <INST_PATH>        [default: inst]
+      --proof-path <PROOF_PATH>      [default: proof]
+  		-h, --help                         Print help
+```
+
+e.g. `./target/release/zkmb verify --vin ./examples/ZoKrates/pf/arr_str_arr_str.zok.vin`

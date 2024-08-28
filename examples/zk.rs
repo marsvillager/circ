@@ -93,7 +93,7 @@ fn main() {
         (ProofAction::Spartan, _) => {
             let prover_input_map = parse_value_map(&std::fs::read(opts.pin).unwrap());
             println!("Spartan Proving");
-            let (gens, inst, proof) = spartan::prove(opts.prover_key, &prover_input_map).unwrap();
+            let (gens, inst, proof) = spartan::prove(opts.prover_key, &prover_input_map, opts.circ.field.builtin).unwrap();
 
             let verifier_input_map = parse_value_map(&std::fs::read(opts.vin).unwrap());
             println!("Spartan Verifying");
