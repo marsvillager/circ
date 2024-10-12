@@ -145,10 +145,22 @@ pub enum Op {
     /// The double box is to get a thin pointer.
     Witness(Box<Box<str>>),
 
-    /// Integer n-ary operator
-    IntNaryOp(IntNaryOp),
     /// Integer comparison operator
     IntBinPred(IntBinPred),
+    /// Integer n-ary operator
+    IntNaryOp(IntNaryOp),
+    /// Integer binary operator
+    IntBinOp(IntBinOp),
+    /// Integer unary operator
+    IntUnOp(IntUnOp),
+    /// Size of Integer
+    IntSize,
+    /// Integer to bit vector of specified size (overflow ignored)
+    IntToBv(usize),
+    /// Integer to Field
+    IntToPf(FieldT),
+    /// proof to int
+    PfToInt,
 
     /// Binary operator, with arguments (array, index).
     ///
@@ -360,6 +372,12 @@ impl Op {
             Op::Witness(_) => Some(1),
             Op::PfFitsInBits(..) => Some(1),
             Op::IntNaryOp(_) => None,
+            Op::IntToBv(_) => Some(1),
+            Op::IntSize => Some(1),
+            Op::IntToPf(_) => Some(1),
+            Op::PfToInt => Some(1),
+            Op::IntBinOp(_) => Some(2),
+            Op::IntUnOp(_) => Some(1),
             Op::IntBinPred(_) => Some(2),
             Op::UbvToPf(_) => Some(1),
             Op::Select => Some(2),
@@ -585,6 +603,26 @@ pub enum IntNaryOp {
     Add,
     /// Finite field (*)
     Mul,
+}
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Copy, Serialize, Deserialize)]
+/// Integer bin operator
+pub enum IntBinOp {
+    /// Integer floor division (/)
+    Div,
+    /// Integer subtraction (-)
+    Sub,
+    /// Integer remainder (%)
+    Rem,
+    /// Modular inverse
+    ModInv,
+}
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Copy, Serialize, Deserialize)]
+/// Integer unary operations
+pub enum IntUnOp {
+    /// Integer negation
+    Neg,
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Copy, Serialize, Deserialize)]
@@ -1415,6 +1453,11 @@ impl Value {
             _ => None,
         }
     }
+
+    /// Is this value a scalar (non-composite) type?
+    pub fn is_scalar(&self) -> bool {
+        !matches!(self, Value::Array(..) | Value::Map(..) | Value::Tuple(..))
+    }
 }
 
 /// Make an array from a sequence of terms.
@@ -1504,6 +1547,14 @@ pub fn bool_lit(b: bool) -> Term {
     const_(Value::Bool(b))
 }
 
+/// Make an integer constant term.
+pub fn int_lit<T>(int: T) -> Term
+where
+    Integer: From<T>,
+{
+    leaf_term(Op::new_const(Value::Int(int.into())))
+}
+
 #[macro_export]
 /// Make a term.
 ///
@@ -1557,17 +1608,16 @@ pub(super) const TERM_CACHE_LIMIT: usize = 65536;
 
 /// Iterator over descendents in child-first order.
 pub struct PostOrderIter {
-    // (cs stacked, term)
-    stack: Vec<(bool, Term)>,
-    visited: TermSet,
+    stack: Vec<extras::TermCsRevIter>,
+    outputed: TermSet,
 }
 
 impl PostOrderIter {
     /// Make an iterator over the descendents of `root`.
     pub fn new(root: Term) -> Self {
         Self {
-            stack: vec![(false, root)],
-            visited: TermSet::default(),
+            stack: vec![extras::TermCsRevIter::new(root)],
+            outputed: TermSet::default(),
         }
     }
     /// Make an iterator over the descendents of `roots`, stopping at `skips`.
@@ -1576,9 +1626,9 @@ impl PostOrderIter {
             stack: roots
                 .into_iter()
                 .filter(|t| !skips.contains(t))
-                .map(|t| (false, t))
+                .map(extras::TermCsRevIter::new)
                 .collect(),
-            visited: skips,
+            outputed: skips,
         }
     }
 }
@@ -1586,22 +1636,25 @@ impl PostOrderIter {
 impl std::iter::Iterator for PostOrderIter {
     type Item = Term;
     fn next(&mut self) -> Option<Term> {
-        while let Some((children_pushed, t)) = self.stack.last() {
-            if self.visited.contains(t) {
-                self.stack.pop();
-            } else if !children_pushed {
-                self.stack.last_mut().unwrap().0 = true;
-                let last = self.stack.last().unwrap().1.clone();
-                self.stack
-                    .extend(last.cs().iter().map(|c| (false, c.clone())));
-            } else {
-                break;
+        #[allow(clippy::while_let_on_iterator)]
+        while let Some(iter) = self.stack.last_mut() {
+            let mut empty = true;
+            while let Some(n) = iter.next() {
+                if !self.outputed.contains(&n) {
+                    self.stack.push(extras::TermCsRevIter::new(n));
+                    empty = false;
+                    break;
+                }
+            }
+            if empty {
+                let term = self.stack.pop().unwrap().term();
+                // If it is newly inserted
+                if self.outputed.insert(term.clone()) {
+                    return Some(term);
+                }
             }
         }
-        self.stack.pop().map(|(_, t)| {
-            self.visited.insert(t.clone());
-            t
-        })
+        None
     }
 }
 
