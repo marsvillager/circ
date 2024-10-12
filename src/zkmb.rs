@@ -3,9 +3,10 @@ use log::trace;
 use bincode::{deserialize_from, serialize_into};
 use serde::{de::DeserializeOwned, Serialize};
 
-use circ::{
+use circ_zkmb::{
     cfg::{
         cfg,
+        set,
         clap::{self, Parser, Subcommand},
         CircOpt,
     },
@@ -15,7 +16,7 @@ use circ::{
     },
     ir::{
         opt::{opt, Opt},
-        term::{text::parse_value_map, BV_LSHR, BV_SHL},
+        term::{text, BV_LSHR, BV_SHL},
     },
     target::r1cs::{
         opt::reduce_linearities,
@@ -100,7 +101,7 @@ fn main() {
         .format_timestamp(None)
         .init();
     let options = Options::parse();
-    circ::cfg::set(&options.circ);
+    set(&options.circ);
     
     match options.action {
         Action::Generate{ path, prover_key, verifier_key } => {
@@ -183,7 +184,7 @@ fn main() {
         
             println!("Running backend");
             let cs = cs.get("main");
-            trace!("IR: {}", circ::ir::term::text::serialize_computation(cs));
+            trace!("IR: {}", text::serialize_computation(cs));
             let mut r1cs = to_r1cs(cs, cfg());
             println!("R1CS cons before reduce linearity {}", r1cs.constraints().len());
             println!("R1CS stats: {:#?}", r1cs.stats());
@@ -203,7 +204,7 @@ fn main() {
                 .unwrap();
         }
         Action::Prove { prover_key, pin, gens_path, inst_path, proof_path} => {
-            let prover_input_map = parse_value_map(&std::fs::read(pin).unwrap());
+            let prover_input_map = text::parse_value_map(&std::fs::read(pin).unwrap());
             println!("Spartan Proving");
             let (gens, inst, proof) = spartan::prove(prover_key, &prover_input_map, options.circ.field.builtin).unwrap(); 
             write_to_path::<_, _>(gens_path, &gens).unwrap(); // public parameters
@@ -211,7 +212,7 @@ fn main() {
             write_to_path::<_, _>(proof_path, &proof).unwrap(); // proof
         }
         Action::Verify { verifier_key, vin, gens_path, inst_path, proof_path } => {
-            let verifier_input_map = parse_value_map(&std::fs::read(vin).unwrap());
+            let verifier_input_map = text::parse_value_map(&std::fs::read(vin).unwrap());
             println!("Spartan Verifying");
             let gens = read_from_path::<_, _>(gens_path).unwrap();
             let inst = read_from_path::<_, _>(inst_path).unwrap();

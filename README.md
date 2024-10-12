@@ -74,6 +74,12 @@ environmental variable to the SMT solver's invocation command (`cvc4` or
 
 # ZKMB
 
+## lib
+```
+cargo build --lib --release --features spartan,smt,zok
+```
+
+## bin
 ```
 cargo build --release --features spartan,smt,zok
 ```
