@@ -1055,7 +1055,7 @@ impl R1cs {
         }
     }
 
-    /// Prover Data
+    /// Verifier Data
     fn verifier_data(&self, cs: &Computation) -> VerifierData {
         let mut precompute = cs.precomputes.clone();
         self.extend_precomputation(&mut precompute, true);
