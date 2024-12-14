@@ -82,12 +82,12 @@ RUST_LOG=debug
 
 ## lib
 ```
-cargo build --lib --release --features spartan,smt,zok
+cargo build --lib --release --features spartan
 ```
 
 ## bin
 ```
-cargo build --release --features spartan,smt,zok
+cargo build --release --features spartan
 ```
 
 ```
@@ -103,13 +103,16 @@ Commands:
 ## generate
 
 ```
-Usage: zkmb generate [OPTIONS] --path <PATH>
+Usage: zkmb prove [OPTIONS]
 
 Options:
-      --path <PATH>                  
-      --prover-key <PROVER_KEY>      [default: P]
-      --verifier-key <VERIFIER_KEY>  [default: V]
-  		-h, --help                         Print help
+      --prover-key <PROVER_KEY>  [default: P]
+      --pin <PIN>                
+      --witness <WITNESS>        
+      --gens-path <GENS_PATH>    [default: gens]
+      --inst-path <INST_PATH>    [default: inst]
+      --proof-path <PROOF_PATH>  [default: proof]
+  -h, --help                     Print help
 ```
 
 e.g. `./target/release/zkmb generate --path ./examples/ZoKrates/pf/arr_str_arr_str.zok`
@@ -128,7 +131,7 @@ Options:
   		-h, --help                     Print help
 ```
 
-e.g. `./target/release/zkmb prove --pin ./examples/ZoKrates/pf/arr_str_arr_str.zok.pin`
+e.g. `./target/release/zkmb prove --pin ./examples/ZoKrates/pf/arr_str_arr_str.zok.pin` or ``./target/release/zkmb prove --witness test`
 
 ## verify
 
@@ -137,11 +140,12 @@ Usage: zkmb verify [OPTIONS]
 
 Options:
       --verifier-key <VERIFIER_KEY>  [default: V]
-      --vin <VIN>                    [default: vin]
+      --vin <VIN>                    
+      --witness <WITNESS>            
       --gens-path <GENS_PATH>        [default: gens]
       --inst-path <INST_PATH>        [default: inst]
       --proof-path <PROOF_PATH>      [default: proof]
-  		-h, --help                         Print help
+  -h, --help                         Print help
 ```
 
-e.g. `./target/release/zkmb verify --vin ./examples/ZoKrates/pf/arr_str_arr_str.zok.vin`
+e.g. `./target/release/zkmb verify --vin ./examples/ZoKrates/pf/arr_str_arr_str.zok.vin` or ``./target/release/zkmb verify --witness test`

@@ -1,8 +1,13 @@
 // https://eprint.iacr.org/2019/458.pdf
+from "./constants.zok" import POSEIDON_C_BN128, POSEIDON_M_BN128, POSEIDON_C_DALEK, POSEIDON_M_DALEK
 
-from "./constants.zok" import POSEIDON_C, POSEIDON_M
+def ark_497<N>(field[N] state, field[497] c, u32 it) -> field[N]:
+    for u32 i in 0..N do
+        state[i] = state[i] + c[it + i]
+    endfor
+    return state
 
-def ark<N>(field[N] state, field[497] c, u32 it) -> field[N]:
+def ark_639<N>(field[N] state, field[639] c, u32 it) -> field[N]:
     for u32 i in 0..N do
         state[i] = state[i] + c[it + i]
     endfor
@@ -15,7 +20,7 @@ def sbox<N>(field[N] state, u32 f, u32 p, u32 r) -> field[N]:
     endfor
     return state
 
-def mix<N>(field[N] state, field[7][7] m) -> field[N]:
+def mix_7<N>(field[N] state, field[7][7] m) -> field[N]:
     field[N] out = [0; N]
     for u32 i in 0..N do
         field acc = 0
@@ -26,7 +31,18 @@ def mix<N>(field[N] state, field[7][7] m) -> field[N]:
     endfor
     return out
 
-def main<N>(field[N] inputs) -> field:
+def mix_9<N>(field[N] state, field[9][9] m) -> field[N]:
+    field[N] out = [0; N]
+    for u32 i in 0..N do
+        field acc = 0
+        for u32 j in 0..N do 
+            acc = acc + (state[j] * m[i][j])
+        endfor
+        out[i] = acc
+    endfor
+    return out
+
+def generate_poseidon_bn128<N>(field[N] inputs) -> field:
     assert(N > 0 && N <= 6) // max 6 inputs
 
     u32 t = N + 1
@@ -40,9 +56,9 @@ def main<N>(field[N] inputs) -> field:
     // This is done to keep the function generic, as resulting array size depends on `t`
     // and we do not want callers passing down constants.
     // This should be revisited once compiler limitations are gone.
-
-    field[497]  c = POSEIDON_C[t - 2]
-    field[7][7] m = POSEIDON_M[t - 2]
+    // constans 中最多有 497 个，其它不够的补 0 
+    field[497]  c = POSEIDON_C_BN128[t - 2]
+    field[7][7] m = POSEIDON_M_BN128[t - 2]
 
     field[t] state = [0; t]
     for u32 i in 1..t do
@@ -50,9 +66,44 @@ def main<N>(field[N] inputs) -> field:
     endfor
 
     for u32 r in 0..f+p do
-        state = ark(state, c, r * t)
+        state = ark_497(state, c, r * t)
         state = sbox(state, f, p, r)
-        state = mix(state, m)
+        state = mix_7(state, m)
     endfor
 
     return state[0]
+
+def generate_poseidon_dalek<N>(field[N] inputs) -> field:
+    assert(N > 0 && N <= 8) // max 8 inputs
+
+    u32 t = N + 1
+    u32[8] rounds_p = [56, 57, 56, 60, 60, 63, 64, 63]
+
+    u32 f = 8
+    u32 p = rounds_p[(t - 2)]
+
+    // constans 中最多有 639 个，其它不够的补 0 
+    field[639]  c = POSEIDON_C_DALEK[t - 2]
+    field[9][9] m = POSEIDON_M_DALEK[t - 2]
+
+    field[t] state = [0; t]
+    for u32 i in 1..t do
+        state[i] = inputs[i - 1]
+    endfor
+
+    for u32 r in 0..f+p do
+        state = ark_639(state, c, r * t)
+        state = sbox(state, f, p, r)
+        state = mix_9(state, m)
+    endfor
+
+    return state[0]
+
+def main(private field[2] inputs, public field comm) -> field:
+    field my_comm = generate_poseidon_bn128::<2>(inputs)   // 1 2 7853200120776062878684798364095072458815029376092732009249414926327459813530
+    // field my_comm = generate_poseidon_dalek::<2>(inputs)    // 1 2 5362389405216335910045643038972094180457877342203906551890717469987725241049 
+    // for u32 i in 1..5 do
+    //     my_comm = generate_poseidon::<2>([inputs[0], my_comm])
+    // endfor
+    assert(my_comm == comm)
+    return my_comm

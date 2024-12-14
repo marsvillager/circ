@@ -61,7 +61,7 @@ bls12_381 = "0.7"
 approx = "0.5.0"
 
 [features]
-default = []
+default = ["smt", "zok"]
 # frontends
 c = ["lang-c"]
 zok = ["smt", "zokrates_parser", "zokrates_pest_ast", "typed-arena", "petgraph"]
@@ -76,7 +76,7 @@ spartan = ["r1cs", "dep:spartan", "merlin", "curve25519-dalek", "bincode", "gmp-
 bellman = ["r1cs", "dep:bellman", "ff", "group", "pairing", "serde_bytes", "bincode", "gmp-mpfr-sys", "byteorder", "rayon"]
 
 [lib]
-name = "circ_zkmb"
+name = "circ"
 crate-type = ["rlib", "cdylib"]
 path = "src/lib.rs"
 

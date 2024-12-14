@@ -1,0 +1,31 @@
+from "EMBED" import u64_to_bits
+from "../../../../third_party/ZoKrates/zokrates_stdlib/stdlib/hashes/poseidon/poseidon.zok" import generate_poseidon_bn128, generate_poseidon_dalek
+
+
+// is u64 big endian or little endian in ZoKrates?
+def compute_merkle_root<HEIGHT>(field leaf, u64 direction_selector, field[HEIGHT] digests) -> field:
+    field current_digest = leaf
+    // should be little endian, so need to be reversed
+    bool[64] direction_bits = u64_to_bits(direction_selector)
+    field[2] input_to_next_hash = [0; 2]
+    field[HEIGHT] result = [0; HEIGHT]
+
+    // 计算每层哈希值
+    for u32 i in 0..HEIGHT do 
+        // 根据方向选择左子树还是右子树（merkle 树中的游走路径）
+        for u32 j in 0..2 do
+            input_to_next_hash[j] = if direction_bits[64 - i - 1] then if j >= 1 then current_digest else digests[i] fi else if j < 1 then current_digest else digests[i] fi fi
+        endfor
+
+        current_digest = generate_poseidon_bn128(input_to_next_hash)
+        // current_digest = generate_poseidon_dalek(input_to_next_hash)
+    endfor
+
+    return current_digest
+
+// test case
+// leaf = porn-google.com
+def main(private field leaf, private u64 direction_selector, private field[21] digests) -> field:
+    field result = compute_merkle_root(leaf, direction_selector, digests)
+    // assert(result == 7600623645497885789568289175286925629407521470620758257549081136559540347639)
+    return result
