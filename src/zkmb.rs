@@ -21,6 +21,8 @@ use circ::{
     witnesses::{
         Witness, 
         test_witness::*,
+        aes_witness::*,
+        sha_round_witness::*,
         merkle_path_auth_witness::*, 
         non_membership_witness::*, 
         channel_open_witness::*, 
@@ -221,6 +223,14 @@ fn main() {
                     "test" => Box::new(TestProverWitness {  // ./examples/ZoKrates/pf/arr_str_arr_str.zok.pin
                         y: "4".to_string()
                     }),
+                    "aes" => Box::new(AESProverWitness {
+                        key: vec![0; 16],
+                        iv: vec![0; 12],
+                        ct: vec![0; 160]
+                    }),
+                    "sha_round" => Box::new(ShaRoundProverWitness {
+                        a: vec![0; 16]
+                    }),
                     "merkle_path_auth" => Box::new(MerklePathAuthProverWitness {
                         leaf: "9817580614032284009472102877315339047595385576831075091947210607949273826813".to_string(),
                         direction_selector: 797055,
@@ -272,6 +282,16 @@ fn main() {
                 let verifier_witness: Box<dyn Witness> = match verifier_witness.as_str() {
                     "test" => Box::new(TestVerifierWitness {  // ./examples/ZoKrates/pf/arr_str_arr_str.zok.vin
                         value: "16".to_string()
+                    }),
+                    "aes" => Box::new(AESVerifierWitness {  
+                        key: vec![0; 16],
+                        iv: vec![0; 12],
+                        ct: vec![0; 160],
+                        ret: vec![3, 136, 218, 206, 96, 182, 163, 146, 243, 40, 194, 185, 113, 178, 254, 120, 247, 149, 170, 171, 73, 75, 89, 35, 247, 253, 137, 255, 148, 139, 193, 224, 32, 2, 17, 33, 78, 115, 148, 218, 32, 137, 182, 172, 208, 147, 171, 224, 201, 77, 162, 25, 17, 142, 41, 125, 123, 126, 188, 188, 201, 195, 136, 242, 138, 222, 125, 133, 168, 238, 53, 97, 111, 113, 36, 169, 213, 39, 2, 145, 149, 184, 77, 27, 150, 198, 144, 255, 47, 45, 227, 11, 242, 236, 137, 224, 2, 83, 120, 110, 18, 101, 4, 240, 218, 185, 12, 72, 163, 3, 33, 222, 51, 69, 230, 176, 70, 30, 124, 158, 108, 107, 122, 254, 221, 232, 63, 64, 222, 179, 250, 103, 148, 248, 253, 143, 85, 168, 141, 203, 218, 157, 104, 242, 19, 124, 201, 200, 52, 32, 7, 126, 124, 242, 138, 178, 105, 107, 13, 240]
+                    }),
+                    "sha_round" => Box::new(ShaRoundVerifierWitness {
+                        a: vec![0; 16],
+                        ret: vec![3663108286, 398046313, 1647531929, 2006957770, 2363872401, 3235013187, 3137272298, 406301144]
                     }),
                     "merkle_path_auth" => Box::new(MerklePathAuthVerifierWitness {
                         root: "7600623645497885789568289175286925629407521470620758257549081136559540347639".to_string()

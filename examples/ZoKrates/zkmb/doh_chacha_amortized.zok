@@ -10,36 +10,36 @@ from "membership/merkle_non_membership.zok" import check_wildcard_python_path
 // const u8[38] wire_format = [100, 65, 48, 66, 65, 65, 65, 66, 65, 65, 65, 65, 65, 65, 65, 65, 66, 109, 70, 116, 89, 88, 112, 118, 98, 103, 78, 106, 98, 50, 48, 65, 65, 65, 69, 65, 65, 81]
 
 def main(private u8[32] key, private u8[12] nonce, field comm, u32 SN, u8[500] dns_ct, field root, private u8[255] left_domain_name, private u8[255] right_domain_name, private u32 left_index, private u32 right_index, private field[21] left_path_array, private field[21] right_path_array, private u64 left_dir, private u64 right_dir) -> bool:
-        field key_field = pack_u8_arr(key)
-        field nonce_field = pack_u8_arr(nonce)
-        field comm_cal = generate_poseidon_bn128([key_field, nonce_field])
-        // field comm_cal = generate_poseidon_dalek([key_field, nonce_field])
+    field key_field = pack_u8_arr(key)
+    field nonce_field = pack_u8_arr(nonce)
+    field comm_cal = generate_poseidon_bn128([key_field, nonce_field])
+    // field comm_cal = generate_poseidon_dalek([key_field, nonce_field])
 
-        bool ok = true
-        ok = (comm == comm_cal)
+    bool ok = true
+    ok = (comm == comm_cal)
 
-        u8[4] SN_u8 = u32_to_four_u8(SN)
-        for u32 i in 0..4 do
-            nonce[12 - i - 1] = nonce[12 - i - 1] ^ SN_u8[4 - i - 1]
-        endfor
-        u8[500] dns_query = chacha_encrypt::<500>(key, nonce, dns_ct, 1)
+    u8[4] SN_u8 = u32_to_four_u8(SN)
+    for u32 i in 0..4 do
+        nonce[12 - i - 1] = nonce[12 - i - 1] ^ SN_u8[4 - i - 1]
+    endfor
+    u8[500] dns_query = chacha_encrypt::<500>(key, nonce, dns_ct, 1)
 
-        // bool pt_right = true 
-        // for u32 i in 0..160 do
-        //     pt_right = pt_right && (true_pt[i] == dns_query[i]) 
-        // endfor 
+    // bool pt_right = true 
+    // for u32 i in 0..160 do
+    //     pt_right = pt_right && (true_pt[i] == dns_query[i]) 
+    // endfor 
 
-        u8[2][255] extraction_values = extractDoHGETReverse(dns_query)
+    u8[2][255] extraction_values = extractDoHGETReverse(dns_query)
 
-        // u8[255] converted = extraction_values[0]
-        // bool b64_right = true 
-        // for u32 i in 0..28 do
-        //     b64_right = b64_right && (decoded_b64[i] == converted[i]) 
-        // endfor 
+    // u8[255] converted = extraction_values[0]
+    // bool b64_right = true 
+    // for u32 i in 0..28 do
+    //     b64_right = b64_right && (decoded_b64[i] == converted[i]) 
+    // endfor 
 
-        u8[255] dns_labels_rev = extraction_values[0]
-        // u8[255] dns_labels_rev = [...[109, 111, 99, 46, 101, 108, 112, 112, 97, 46], ...[0; 245]]
+    u8[255] dns_labels_rev = extraction_values[0]
+    // u8[255] dns_labels_rev = [...[109, 111, 99, 46, 101, 108, 112, 112, 97, 46], ...[0; 245]]
 
-        bool output = ok && check_wildcard_python_path::<21>(dns_labels_rev, root, left_domain_name, right_domain_name, left_index, right_index, left_path_array, right_path_array, left_dir, right_dir)
-        assert(output)
-        return output 
+    bool output = ok && check_wildcard_python_path::<21>(dns_labels_rev, root, left_domain_name, right_domain_name, left_index, right_index, left_path_array, right_path_array, left_dir, right_dir)
+    assert(output)
+    return output 

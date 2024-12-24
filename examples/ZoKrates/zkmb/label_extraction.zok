@@ -56,7 +56,6 @@ def decode_base64_character(u8 ch) -> u8 :
 // this function returns the three ASCII characters they encode. 
 
 def convert_one_base64_block(u8[4] input) -> u8[3]:
-     
     u32 one_block = 0 
      
     u8 converted_value = 0

@@ -6,9 +6,11 @@ use serde::{Serialize, Deserialize};
 use crate::{ir::term::{Value, BitVector}, cfg::cfg};
 
 /// This module contains the definitions and implementations for various witness types.
+pub mod aes_witness;
 pub mod channel_open_witness;
 pub mod merkle_path_auth_witness;
 pub mod non_membership_witness;
+pub mod sha_round_witness;
 /// test
 pub mod test_witness;
 
