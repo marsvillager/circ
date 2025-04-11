@@ -106,16 +106,13 @@ Commands:
 ## generate
 
 ```
-Usage: zkmb prove [OPTIONS]
+Usage: zkmb generate [OPTIONS] --path <PATH>
 
 Options:
-      --prover-key <PROVER_KEY>  [default: P]
-      --pin <PIN>                
-      --witness <WITNESS>        
-      --gens-path <GENS_PATH>    [default: gens]
-      --inst-path <INST_PATH>    [default: inst]
-      --proof-path <PROOF_PATH>  [default: proof]
-  -h, --help                     Print help
+      --path <PATH>                  
+      --prover-key <PROVER_KEY>      [default: P]
+      --verifier-key <VERIFIER_KEY>  [default: V]
+  -h, --help                         Print help
 ```
 
 e.g. `./target/release/zkmb generate --path ./examples/ZoKrates/pf/arr_str_arr_str.zok`
@@ -127,11 +124,12 @@ Usage: zkmb prove [OPTIONS]
 
 Options:
       --prover-key <PROVER_KEY>  [default: P]
-      --pin <PIN>                [default: pin]
-      --gens-path <GENS_PATH>    [default: gen]
+      --pin <PIN>                
+      --witness <WITNESS>        
+      --gens-path <GENS_PATH>    [default: gens]
       --inst-path <INST_PATH>    [default: inst]
       --proof-path <PROOF_PATH>  [default: proof]
-  		-h, --help                     Print help
+  -h, --help                     Print help
 ```
 
 e.g. `./target/release/zkmb prove --pin ./examples/ZoKrates/pf/arr_str_arr_str.zok.pin` or ``./target/release/zkmb prove --witness test`
